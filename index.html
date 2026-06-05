@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asesmen Sumatif Akhir Sekolah</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&amp;family=Source+Sans+Pro:wght@400;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    .font-heading { font-family: 'Playfair Display', serif; }
+    .font-body { font-family: 'Source Sans Pro', sans-serif; }
+    .fade-in { animation: fadeIn 1.5s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .slide-in { animation: slideIn 0.5s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    .pulse-btn { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 50% { box-shadow: 0 0 0 12px rgba(255,255,255,0); } }
+    .nav-btn { transition: all 0.2s; }
+    .nav-btn:hover { transform: scale(1.1); }
+    .nav-btn.answered { background: #166534; color: white; }
+    .nav-btn.current { ring: 3px; box-shadow: 0 0 0 3px #fbbf24; }
+    .toast { animation: toastIn 0.3s ease-out; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    .katex { font-size: 1.1em; }
+    .option-btn { transition: all 0.2s; }
+    .option-btn:hover { transform: translateX(4px); }
+    .option-btn.selected { background: #166534; color: white; border-color: #166534; }
+    .app-wrapper { height: 100%; width: 100%; overflow: auto; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ <script src="/_sdk/telemetry_sdk.js"></script></head>
+ <body class="h-full w-full font-body">
+  <div id="app" class="app-wrapper"></div>
+  <script>
+    // ===== CONFIG & STATE =====
+    const defaultConfig = {
+      main_title: "ASESMEN SUMATIF AKHIR SEKOLAH",
+      subject_name: "MATEMATIKA TINGKAT LANJUT",
+      teacher_name: "Sendy Gusdwiyansih, S.Pd.",
+      school_name: "SMK Negeri 1 Muntok",
+      primary_color: "#166534",
+      surface_color: "#ffffff",
+      text_color: "#1a1a1a",
+      accent_color: "#15803d",
+      secondary_color: "#f0fdf4",
+      font_family: "Source Sans Pro",
+      font_size: 16
+    };
+
+    let config = { ...defaultConfig };
+    let currentPage = 'landing';
+    let studentName = '';
+    let studentClass = '';
+    let answers = new Array(20).fill(null);
+    let currentQuestion = 0;
+    let timerInterval = null;
+    let startTime = null;
+    let timeLeft = 90 * 60;
+    let finalScore = null;
+    let records = [];
+
+    // ===== QUESTIONS DATA =====
+    function generateQuestions() {
+      const questions = [];
+
+      // TRANSLASI (3 soal)
+      questions.push({
+        stimulus: "Seorang arsitek merancang taman kota. Ia menempatkan patung di titik $A(3, 5)$. Karena perubahan desain, patung harus dipindahkan sejauh 4 satuan ke kanan dan 3 satuan ke bawah.",
+        question: "Tentukan koordinat posisi baru patung tersebut setelah translasi.",
+        options: ["$(7, 2)$", "$(7, 8)$", "$(-1, 2)$", "$(-1, 8)$", "$(7, -2)$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Sebuah drone bergerak dari posisi $P(−2, 4)$ dan mengalami translasi oleh vektor $\\begin{pmatrix} 5 \\\\ -3 \\end{pmatrix}$ kemudian dilanjutkan translasi oleh vektor $\\begin{pmatrix} -1 \\\\ 2 \\end{pmatrix}$.",
+        question: "Koordinat akhir drone tersebut adalah...",
+        options: ["$(2, 3)$", "$(3, 2)$", "$(2, 1)$", "$(4, 3)$", "$(1, 3)$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Sebuah kapal pesiar bergerak dari pelabuhan di koordinat $(1, -3)$. Kapal mengalami perpindahan sebesar $\\begin{pmatrix} 6 \\\\ 7 \\end{pmatrix}$ akibat arus laut.",
+        question: "Posisi akhir kapal pesiar tersebut adalah...",
+        options: ["$(7, 4)$", "$(7, -4)$", "$(-5, 4)$", "$(-5, -10)$", "$(5, 4)$"],
+        correct: 0
+      });
+
+      // REFLEKSI (3 soal)
+      questions.push({
+        stimulus: "Seorang desainer grafis mencerminkan logo perusahaan yang memiliki titik sudut $Q(4, -2)$ terhadap sumbu-$y$ untuk membuat versi mirror.",
+        question: "Koordinat bayangan titik $Q$ setelah dicerminkan terhadap sumbu-$y$ adalah...",
+        options: ["$(-4, -2)$", "$(4, 2)$", "$(-4, 2)$", "$(2, -4)$", "$(-2, 4)$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Sebuah segitiga memiliki titik sudut $R(3, 5)$. Segitiga tersebut dicerminkan terhadap garis $y = x$ untuk keperluan desain arsitektur.",
+        question: "Bayangan titik $R$ setelah refleksi terhadap garis $y = x$ adalah...",
+        options: ["$(5, 3)$", "$(3, -5)$", "$(-3, 5)$", "$(-5, -3)$", "$(5, -3)$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Dalam pembuatan batik digital, titik motif $S(-2, 6)$ dicerminkan terhadap sumbu-$x$ untuk membuat pola simetris.",
+        question: "Koordinat bayangan titik $S$ setelah refleksi terhadap sumbu-$x$ adalah...",
+        options: ["$(-2, -6)$", "$(2, 6)$", "$(2, -6)$", "$(-2, 6)$", "$(6, -2)$"],
+        correct: 0
+      });
+
+      // ROTASI (2 soal)
+      questions.push({
+        stimulus: "Sebuah baling-baling angin memiliki ujung di titik $T(4, 0)$. Baling-baling diputar $90°$ berlawanan arah jarum jam terhadap titik pusat $O(0, 0)$.",
+        question: "Koordinat posisi baru ujung baling-baling tersebut adalah...",
+        options: ["$(0, 4)$", "$(0, -4)$", "$(-4, 0)$", "$(4, 4)$", "$(-4, 4)$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Jarum jam menunjuk angka 3 pada koordinat $(5, 0)$. Jarum diputar $180°$ terhadap pusat jam di $O(0, 0)$.",
+        question: "Posisi ujung jarum setelah rotasi $180°$ adalah...",
+        options: ["$(-5, 0)$", "$(0, 5)$", "$(0, -5)$", "$(5, 5)$", "$(-5, -5)$"],
+        correct: 0
+      });
+
+      // DILATASI (2 soal)
+      questions.push({
+        stimulus: "Seorang fotografer memperbesar foto dengan faktor skala 3 terhadap titik pusat $O(0, 0)$. Titik sudut foto berada di $U(2, -1)$.",
+        question: "Koordinat bayangan titik $U$ setelah dilatasi adalah...",
+        options: ["$(6, -3)$", "$(6, 3)$", "$(-6, 3)$", "$(2, -3)$", "$(3, -6)$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Model miniatur gedung dibuat dengan skala $\\frac{1}{2}$ terhadap pusat $O(0, 0)$. Puncak gedung asli berada di koordinat $(8, 12)$.",
+        question: "Koordinat puncak pada model miniatur adalah...",
+        options: ["$(4, 6)$", "$(16, 24)$", "$(4, 12)$", "$(8, 6)$", "$(2, 3)$"],
+        correct: 0
+      });
+
+      // TRIGONOMETRI (10 soal)
+      questions.push({
+        stimulus: "Sebuah mercusuar memiliki lampu yang berputar. Intensitas cahaya yang mengenai kapal dimodelkan oleh fungsi $f(x) = 3\\sin(2x) + 1$ dengan $x$ dalam radian.",
+        question: "Periode fungsi intensitas cahaya tersebut adalah...",
+        options: ["$\\pi$", "$2\\pi$", "$\\frac{\\pi}{2}$", "$3\\pi$", "$4\\pi$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Tinggi gelombang laut dimodelkan oleh $h(t) = 4\\cos\\left(\\frac{\\pi}{3}t\\right) + 2$ meter, dengan $t$ dalam jam.",
+        question: "Amplitudo gelombang laut tersebut adalah... meter",
+        options: ["$4$", "$2$", "$6$", "$8$", "$\\frac{4}{3}$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Diketahui $\\sin\\alpha = \\frac{3}{5}$ dengan $\\alpha$ di kuadran I. Sebuah insinyur memerlukan nilai $\\sin 2\\alpha$ untuk perhitungan kemiringan jembatan.",
+        question: "Nilai $\\sin 2\\alpha$ adalah...",
+        options: ["$\\frac{24}{25}$", "$\\frac{12}{25}$", "$\\frac{7}{25}$", "$\\frac{16}{25}$", "$\\frac{18}{25}$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Suhu ruangan dimodelkan oleh $T(t) = 5\\sin\\left(\\frac{\\pi}{12}t - \\frac{\\pi}{4}\\right) + 22$ dalam °C, dengan $t$ jam setelah tengah malam.",
+        question: "Suhu maksimum ruangan tersebut adalah... °C",
+        options: ["$27$", "$22$", "$17$", "$32$", "$25$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Grafik fungsi $y = 2\\tan(x)$ memiliki asimtot tegak.",
+        question: "Asimtot tegak pertama di kuadran I untuk fungsi tersebut adalah...",
+        options: ["$x = \\frac{\\pi}{2}$", "$x = \\pi$", "$x = \\frac{\\pi}{4}$", "$x = 2\\pi$", "$x = \\frac{3\\pi}{2}$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Sebuah Ferris wheel berdiameter 20 meter dengan pusat 15 meter di atas tanah. Ketinggian penumpang dimodelkan oleh $h(t) = -10\\cos\\left(\\frac{\\pi}{5}t\\right) + 15$.",
+        question: "Ketinggian minimum penumpang dari tanah adalah... meter",
+        options: ["$5$", "$0$", "$10$", "$15$", "$25$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Diketahui $\\cos\\alpha = -\\frac{4}{5}$ dan $\\alpha$ berada di kuadran III.",
+        question: "Nilai $\\cos\\frac{\\alpha}{2}$ jika $\\frac{\\alpha}{2}$ di kuadran II adalah...",
+        options: ["$-\\frac{1}{\\sqrt{10}}$", "$\\frac{1}{\\sqrt{10}}$", "$-\\frac{3}{\\sqrt{10}}$", "$\\frac{3}{\\sqrt{10}}$", "$-\\frac{2}{\\sqrt{5}}$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Tegangan listrik AC dimodelkan oleh $V(t) = 220\\sin(100\\pi t)$ volt.",
+        question: "Frekuensi tegangan listrik tersebut adalah... Hz",
+        options: ["$50$", "$100$", "$100\\pi$", "$50\\pi$", "$220$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Persamaan $2\\sin^2 x - 3\\sin x + 1 = 0$ harus diselesaikan untuk interval $0° \\leq x \\leq 360°$.",
+        question: "Himpunan penyelesaian persamaan tersebut adalah...",
+        options: ["$\\{30°, 90°, 150°\\}$", "$\\{30°, 150°\\}$", "$\\{90°, 210°, 330°\\}$", "$\\{30°, 90°, 150°, 270°\\}$", "$\\{60°, 90°, 120°\\}$"],
+        correct: 0
+      });
+      questions.push({
+        stimulus: "Sebuah pendulum bergerak dengan posisi horizontal $x(t) = 8\\sin\\left(\\frac{2\\pi}{3}t + \\frac{\\pi}{6}\\right)$ cm.",
+        question: "Pergeseran fase fungsi tersebut adalah...",
+        options: ["$\\frac{\\pi}{6}$ rad ke kiri", "$\\frac{\\pi}{6}$ rad ke kanan", "$\\frac{\\pi}{3}$ rad ke kiri", "$\\frac{\\pi}{3}$ rad ke kanan", "$\\frac{2\\pi}{3}$ rad ke kiri"],
+        correct: 0
+      });
+
+      // Shuffle options for each question
+      return questions.map(q => {
+        const correctAnswer = q.options[q.correct];
+        const shuffled = [...q.options].sort(() => Math.random() - 0.5);
+        return {
+          ...q,
+          options: shuffled,
+          correct: shuffled.indexOf(correctAnswer)
+        };
+      });
+    }
+
+    let questions = generateQuestions();
+
+    // ===== RENDERING =====
+    function renderApp() {
+      const app = document.getElementById('app');
+      switch(currentPage) {
+        case 'landing': app.innerHTML = renderLanding(); break;
+        case 'biodata': app.innerHTML = renderBiodata(); break;
+        case 'exam': app.innerHTML = renderExam(); break;
+        case 'result': app.innerHTML = renderResult(); break;
+      }
+      renderKatex();
+      lucide.createIcons();
+      if (currentPage === 'exam' && !timerInterval) startTimer();
+    }
+
+    function renderLanding() {
+      return `
+        <div class="h-full w-full flex flex-col items-center justify-center fade-in" style="background: linear-gradient(135deg, #166534 0%, #15803d 50%, #22c55e 100%);">
+          <div class="text-center px-6 max-w-3xl">
+            <div class="mb-8">
+              <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                <i data-lucide="book-open" style="width:40px;height:40px;color:white;"></i>
+              </div>
+              <h1 class="font-heading text-white text-2xl md:text-4xl font-black mb-4 leading-tight">${config.main_title || defaultConfig.main_title}</h1>
+              <div class="text-white/90 text-lg md:text-xl space-y-1">
+                <p>KELAS XI | ${config.school_name || defaultConfig.school_name}</p>
+                <p class="font-bold text-yellow-300">MATA PELAJARAN "${config.subject_name || defaultConfig.subject_name}"</p>
+              </div>
+            </div>
+            <button onclick="goToBiodata()" class="pulse-btn mt-8 bg-white text-green-800 font-bold text-lg px-10 py-4 rounded-full shadow-2xl hover:scale-105 transition-transform">
+              <i data-lucide="play" class="inline w-5 h-5 mr-2"></i>MULAI ASESMEN
+            </button>
+          </div>
+          <footer class="absolute bottom-6 text-white/70 text-sm text-center px-4">
+            ${config.teacher_name || defaultConfig.teacher_name} | ${config.school_name || defaultConfig.school_name} | 2026
+          </footer>
+        </div>`;
+    }
+
+    function renderBiodata() {
+      const now = new Date();
+      const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      const dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+      return `
+        <div class="h-full w-full flex flex-col" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+          <header class="bg-green-800 text-white p-4 flex justify-between items-center shadow-lg">
+            <div class="flex items-center gap-3">
+              <i data-lucide="clipboard-list" style="width:24px;height:24px;"></i>
+              <span class="font-heading font-bold text-lg">${config.main_title || defaultConfig.main_title}</span>
+            </div>
+            <div class="text-right text-sm">
+              <div class="font-semibold">${dateStr}</div>
+              <div id="clock-bio" class="text-yellow-300 font-mono"></div>
+            </div>
+          </header>
+          <div class="flex-1 flex items-center justify-center p-6 overflow-auto">
+            <div class="slide-in bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg border border-green-100">
+              <h2 class="font-heading text-2xl text-green-800 font-bold mb-6 text-center">Formulir Biodata</h2>
+              <div class="space-y-5">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1" for="nama">NAMA LENGKAP</label>
+                  <input id="nama" type="text" placeholder="Masukkan nama lengkap" class="w-full border-2 border-green-200 rounded-lg px-4 py-3 focus:border-green-500 focus:outline-none transition" value="${studentName}">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1" for="kelas">KELAS</label>
+                  <select id="kelas" class="w-full border-2 border-green-200 rounded-lg px-4 py-3 focus:border-green-500 focus:outline-none transition">
+                    <option value="">-- Pilih Kelas --</option>
+                    <option ${studentClass==='XI-1 TEI'?'selected':''}>XI-1 TEI</option>
+                    <option ${studentClass==='XI-3 TEI'?'selected':''}>XI-3 TEI</option>
+                    <option ${studentClass==='XI-KI'?'selected':''}>XI-KI</option>
+                    <option ${studentClass==='XI-DKV'?'selected':''}>XI-DKV</option>
+                    <option ${studentClass==='XI-1 TKJ'?'selected':''}>XI-1 TKJ</option>
+                    <option ${studentClass==='XI-2 TKJ'?'selected':''}>XI-2 TKJ</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mt-5 bg-yellow-50 border border-yellow-300 rounded-lg p-3 flex items-center gap-2">
+                <i data-lucide="alert-triangle" style="width:18px;height:18px;color:#ca8a04;"></i>
+                <span class="text-yellow-800 text-sm font-semibold">Pastikan biodata sudah benar</span>
+              </div>
+              <div id="bio-error" class="mt-3 hidden text-red-600 text-sm font-semibold text-center"></div>
+              <button onclick="submitBiodata()" class="mt-6 w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
+                LANJUT <i data-lucide="arrow-right" style="width:18px;height:18px;"></i>
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderExam() {
+      const q = questions[currentQuestion];
+      const answeredCount = answers.filter(a => a !== null).length;
+      return `
+        <div class="h-full w-full flex flex-col" style="background:#f0fdf4;">
+          <header class="bg-green-800 text-white p-3 shadow-lg">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <i data-lucide="file-text" style="width:20px;height:20px;"></i>
+                <span class="font-bold text-sm md:text-base">${config.subject_name || defaultConfig.subject_name}</span>
+              </div>
+              <div class="flex items-center gap-4 text-sm">
+                <span class="text-yellow-300 font-semibold">${studentName} | ${studentClass}</span>
+                <div class="flex items-center gap-1">
+                  <i data-lucide="clock" style="width:16px;height:16px;"></i>
+                  <span id="timer" class="font-mono font-bold">${formatTime(timeLeft)}</span>
+                </div>
+                <div id="realtime-clock" class="text-green-200 font-mono text-xs"></div>
+              </div>
+            </div>
+          </header>
+          <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+            <!-- Navigation Panel -->
+            <div class="md:w-64 bg-white border-r border-green-100 p-3 overflow-auto">
+              <div class="text-xs font-semibold text-gray-500 mb-2">NAVIGASI SOAL (${answeredCount}/20 dijawab)</div>
+              <div class="grid grid-cols-10 md:grid-cols-5 gap-1">
+                ${Array.from({length:20}, (_,i) => `
+                  <button onclick="goToQuestion(${i})" class="nav-btn w-8 h-8 rounded-lg text-xs font-bold border-2 ${i===currentQuestion ? 'border-yellow-400 bg-yellow-50 text-green-800' : answers[i]!==null ? 'border-green-600 bg-green-700 text-white' : 'border-gray-300 bg-gray-50 text-gray-600'}">${i+1}</button>
+                `).join('')}
+              </div>
+              <button onclick="submitExam()" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-sm transition flex items-center justify-center gap-1">
+                <i data-lucide="send" style="width:14px;height:14px;"></i> KIRIM JAWABAN
+              </button>
+            </div>
+            <!-- Question Area -->
+            <div class="flex-1 overflow-auto p-4 md:p-6">
+              <div class="slide-in max-w-3xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg p-5 md:p-7 border border-green-100">
+                  <div class="flex items-center gap-2 mb-4">
+                    <span class="bg-green-700 text-white text-xs font-bold px-3 py-1 rounded-full">Soal ${currentQuestion+1}/20</span>
+                    <span class="text-xs text-gray-500">${currentQuestion < 3 ? 'Translasi' : currentQuestion < 6 ? 'Refleksi' : currentQuestion < 8 ? 'Rotasi' : currentQuestion < 10 ? 'Dilatasi' : 'Trigonometri'}</span>
+                  </div>
+                  <div class="bg-green-50 rounded-lg p-4 mb-4 border-l-4 border-green-600">
+                    <p class="text-sm font-semibold text-green-800 mb-1">Stimulus:</p>
+                    <p class="text-gray-800 katex-render">${q.stimulus}</p>
+                  </div>
+                  <p class="font-semibold text-gray-900 mb-4 katex-render">${q.question}</p>
+                  <div class="space-y-2">
+                    ${q.options.map((opt, i) => `
+                      <button onclick="selectAnswer(${i})" class="option-btn w-full text-left px-4 py-3 rounded-lg border-2 font-medium transition ${answers[currentQuestion]===i ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-800 border-gray-200 hover:border-green-400 hover:bg-green-50'}">
+                        <span class="inline-flex items-center gap-3"><span class="w-7 h-7 rounded-full ${answers[currentQuestion]===i ? 'bg-white/30' : 'bg-gray-100'} flex items-center justify-center text-sm font-bold">${String.fromCharCode(65+i)}</span><span class="katex-render">${opt}</span></span>
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+                <div class="flex justify-between mt-4">
+                  <button onclick="prevQuestion()" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold text-sm transition ${currentQuestion===0?'invisible':''}">← Sebelumnya</button>
+                  <button onclick="nextQuestion()" class="px-5 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg font-semibold text-sm transition ${currentQuestion===19?'invisible':''}">Selanjutnya →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Toast -->
+          <div id="toast-container" class="fixed top-4 right-4 z-50"></div>
+          <!-- Confirm Modal -->
+          <div id="confirm-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center">
+              <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-yellow-100 flex items-center justify-center">
+                <i data-lucide="alert-circle" style="width:28px;height:28px;color:#ca8a04;"></i>
+              </div>
+              <h3 class="font-heading text-xl font-bold text-gray-900 mb-2">APAKAH ANDA YAKIN MENYELESAIKAN ASESMEN INI ?!</h3>
+              <p class="text-gray-600 text-sm mb-5">Jawaban yang sudah dikirim tidak dapat diubah kembali.</p>
+              <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="flex-1 py-2 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-100 transition">TIDAK</button>
+                <button onclick="confirmSubmit()" class="flex-1 py-2 bg-green-700 text-white rounded-lg font-semibold hover:bg-green-800 transition">YA</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderResult() {
+      const score = finalScore;
+      const keterangan = score >= 90 ? 'VERY GOOD' : score >= 75 ? 'GOOD' : 'POOR';
+      const emoji = score >= 90 ? '🏆' : score >= 75 ? '⭐' : '📚';
+      const colorClass = score >= 90 ? 'text-green-600' : score >= 75 ? 'text-blue-600' : 'text-red-600';
+      return `
+        <div class="h-full w-full flex flex-col items-center justify-center fade-in" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+          <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center border border-green-100">
+            <div class="text-5xl mb-4">${emoji}</div>
+            <h2 class="font-heading text-2xl font-bold text-green-800 mb-6">HASIL ASESMEN</h2>
+            <div class="space-y-3 text-left bg-gray-50 rounded-xl p-5 mb-5">
+              <div class="flex justify-between"><span class="text-gray-600 font-semibold">Nama</span><span class="font-bold">${studentName}</span></div>
+              <div class="flex justify-between"><span class="text-gray-600 font-semibold">Kelas</span><span class="font-bold">${studentClass}</span></div>
+              <hr class="border-gray-200">
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600 font-semibold">Nilai</span>
+                <span class="text-3xl font-black ${colorClass}">${score} / 100</span>
+              </div>
+              <div class="flex justify-between"><span class="text-gray-600 font-semibold">Keterangan</span><span class="font-bold ${colorClass}">${keterangan}</span></div>
+            </div>
+            <p class="text-xs text-gray-500">Data telah disimpan. Terima kasih telah mengikuti asesmen.</p>
+          </div>
+          <footer class="mt-6 text-gray-500 text-sm">${config.teacher_name || defaultConfig.teacher_name} | ${config.school_name || defaultConfig.school_name} | 2026</footer>
+        </div>`;
+    }
+
+    // ===== FUNCTIONS =====
+    function goToBiodata() { currentPage = 'biodata'; renderApp(); startBioClock(); }
+
+    function startBioClock() {
+      setInterval(() => {
+        const el = document.getElementById('clock-bio');
+        if (el) el.textContent = new Date().toLocaleTimeString('id-ID');
+      }, 1000);
+    }
+
+    function submitBiodata() {
+      const nama = document.getElementById('nama').value.trim();
+      const kelas = document.getElementById('kelas').value;
+      const errEl = document.getElementById('bio-error');
+      if (!nama || !kelas) {
+        errEl.textContent = 'Harap isi nama dan pilih kelas!';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      studentName = nama;
+      studentClass = kelas;
+      startTime = Date.now();
+      currentPage = 'exam';
+      renderApp();
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const el = document.getElementById('timer');
+        if (el) el.textContent = formatTime(timeLeft);
+        const clockEl = document.getElementById('realtime-clock');
+        if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('id-ID');
+        if (timeLeft <= 0) { clearInterval(timerInterval); autoSubmit(); }
+      }, 1000);
+    }
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+
+    function goToQuestion(i) { currentQuestion = i; renderApp(); }
+    function prevQuestion() { if (currentQuestion > 0) { currentQuestion--; renderApp(); } }
+    function nextQuestion() { if (currentQuestion < 19) { currentQuestion++; renderApp(); } }
+    function selectAnswer(i) { answers[currentQuestion] = i; renderApp(); }
+
+    function submitExam() {
+      const unanswered = answers.filter(a => a === null).length;
+      if (unanswered > 0) {
+        showToast("SILAHKAN JAWAB SEMUA SOAL UNTUK MENYELESAIKAN ASESMEN INI", "error");
+        return;
+      }
+      document.getElementById('confirm-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeConfirm() { document.getElementById('confirm-modal').classList.add('hidden'); }
+
+    async function confirmSubmit() {
+      closeConfirm();
+      clearInterval(timerInterval);
+      let correct = 0;
+      for (let i = 0; i < 20; i++) {
+        if (answers[i] === questions[i].correct) correct++;
+      }
+      finalScore = Math.round((correct / 20) * 100);
+      const duration = Math.round((Date.now() - startTime) / 60000);
+      const keterangan = finalScore >= 90 ? 'VERY GOOD' : finalScore >= 75 ? 'GOOD' : 'POOR';
+      const now = new Date();
+      const tanggal = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+
+      if (records.length >= 999) {
+        showToast("Batas penyimpanan tercapai", "error");
+      } else {
+        const result = await window.dataSdk.create({
+          tanggal_asesmen: tanggal,
+          nama: studentName,
+          kelas: studentClass,
+          total_soal: 20,
+          total_benar: correct,
+          durasi_menit: duration,
+          nilai: finalScore,
+          keterangan: keterangan
+        });
+        if (!result.isOk) showToast("Gagal menyimpan data", "error");
+      }
+      currentPage = 'result';
+      renderApp();
+    }
+
+    function autoSubmit() {
+      // Auto-submit when time runs out even if not all answered
+      clearInterval(timerInterval);
+      let correct = 0;
+      for (let i = 0; i < 20; i++) {
+        if (answers[i] === questions[i].correct) correct++;
+      }
+      finalScore = Math.round((correct / 20) * 100);
+      const duration = 90;
+      const keterangan = finalScore >= 90 ? 'VERY GOOD' : finalScore >= 75 ? 'GOOD' : 'POOR';
+      const now = new Date();
+      const tanggal = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+      window.dataSdk.create({
+        tanggal_asesmen: tanggal, nama: studentName, kelas: studentClass,
+        total_soal: 20, total_benar: correct, durasi_menit: duration,
+        nilai: finalScore, keterangan: keterangan
+      });
+      currentPage = 'result';
+      renderApp();
+    }
+
+    function showToast(msg, type) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast mb-2 px-4 py-3 rounded-lg shadow-lg text-sm font-semibold ${type==='error'?'bg-red-600 text-white':'bg-green-600 text-white'}`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function renderKatex() {
+      document.querySelectorAll('.katex-render').forEach(el => {
+        const html = el.innerHTML;
+        el.innerHTML = html.replace(/\$([^$]+)\$/g, (_, tex) => {
+          try { return katex.renderToString(tex, { throwOnError: false }); }
+          catch(e) { return tex; }
+        });
+      });
+    }
+
+    // ===== SDK INIT =====
+    const dataHandler = {
+      onDataChanged(data) { records = data; }
+    };
+
+    (async () => {
+      await window.dataSdk.init(dataHandler);
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (cfg) => {
+          config = { ...defaultConfig, ...cfg };
+          renderApp();
+        },
+        mapToCapabilities: (cfg) => ({
+          recolorables: [
+            { get: () => cfg.primary_color || defaultConfig.primary_color, set: (v) => { cfg.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); } },
+            { get: () => cfg.surface_color || defaultConfig.surface_color, set: (v) => { cfg.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+            { get: () => cfg.text_color || defaultConfig.text_color, set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+            { get: () => cfg.accent_color || defaultConfig.accent_color, set: (v) => { cfg.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+            { get: () => cfg.secondary_color || defaultConfig.secondary_color, set: (v) => { cfg.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); } }
+          ],
+          borderables: [],
+          fontEditable: { get: () => cfg.font_family || defaultConfig.font_family, set: (v) => { cfg.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+          fontSizeable: { get: () => cfg.font_size || defaultConfig.font_size, set: (v) => { cfg.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+        }),
+        mapToEditPanelValues: (cfg) => new Map([
+          ["main_title", cfg.main_title || defaultConfig.main_title],
+          ["subject_name", cfg.subject_name || defaultConfig.subject_name],
+          ["teacher_name", cfg.teacher_name || defaultConfig.teacher_name],
+          ["school_name", cfg.school_name || defaultConfig.school_name]
+        ])
+      });
+      renderApp();
+    })();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a06b435e0bc59ba8',t:'MTc4MDYyMTQ2NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
